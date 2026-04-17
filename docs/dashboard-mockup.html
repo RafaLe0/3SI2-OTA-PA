@@ -1,0 +1,1815 @@
+<!doctype html>
+<html lang="fr">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>OTA Secure — Dashboard</title>
+		<style>
+			/* ── Reset & Variables ── */
+			*,
+			*::before,
+			*::after {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+
+			:root {
+				--bg: #0d1117;
+				--surface: #161b22;
+				--surface2: #1c2330;
+				--border: #30363d;
+				--text: #e6edf3;
+				--text-muted: #7d8590;
+				--accent: #2f81f7;
+				--accent-dim: #1f4f99;
+				--green: #3fb950;
+				--yellow: #d29922;
+				--red: #f85149;
+				--purple: #a371f7;
+				--sidebar-w: 220px;
+				--header-h: 56px;
+			}
+
+			body {
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+				background: var(--bg);
+				color: var(--text);
+				min-height: 100vh;
+				display: flex;
+				flex-direction: column;
+			}
+
+			/* ── Utility ── */
+			.badge {
+				display: inline-block;
+				padding: 2px 8px;
+				border-radius: 12px;
+				font-size: 11px;
+				font-weight: 600;
+				line-height: 18px;
+			}
+			.badge-green {
+				background: rgba(63, 185, 80, 0.15);
+				color: var(--green);
+			}
+			.badge-yellow {
+				background: rgba(210, 153, 34, 0.15);
+				color: var(--yellow);
+			}
+			.badge-red {
+				background: rgba(248, 81, 73, 0.15);
+				color: var(--red);
+			}
+			.badge-blue {
+				background: rgba(47, 129, 247, 0.15);
+				color: var(--accent);
+			}
+			.badge-purple {
+				background: rgba(163, 113, 247, 0.15);
+				color: var(--purple);
+			}
+
+			.dot {
+				display: inline-block;
+				width: 8px;
+				height: 8px;
+				border-radius: 50%;
+				margin-right: 6px;
+			}
+			.dot-green {
+				background: var(--green);
+				box-shadow: 0 0 6px var(--green);
+			}
+			.dot-yellow {
+				background: var(--yellow);
+				box-shadow: 0 0 6px var(--yellow);
+			}
+			.dot-red {
+				background: var(--red);
+				box-shadow: 0 0 6px var(--red);
+			}
+			.dot-grey {
+				background: var(--text-muted);
+			}
+
+			.btn {
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+				padding: 6px 14px;
+				border-radius: 6px;
+				border: 1px solid var(--border);
+				background: var(--surface2);
+				color: var(--text);
+				font-size: 13px;
+				cursor: pointer;
+				transition:
+					background 0.15s,
+					border-color 0.15s;
+			}
+			.btn:hover {
+				background: #262d38;
+				border-color: var(--accent);
+			}
+			.btn-primary {
+				background: var(--accent);
+				border-color: var(--accent);
+				color: #fff;
+			}
+			.btn-primary:hover {
+				background: #388bfd;
+				border-color: #388bfd;
+			}
+			.btn-danger {
+				background: rgba(248, 81, 73, 0.15);
+				border-color: var(--red);
+				color: var(--red);
+			}
+			.btn-danger:hover {
+				background: rgba(248, 81, 73, 0.25);
+			}
+			.btn-sm {
+				padding: 4px 10px;
+				font-size: 12px;
+			}
+
+			.card {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 16px;
+			}
+
+			/* ── Top header ── */
+			header {
+				height: var(--header-h);
+				background: var(--surface);
+				border-bottom: 1px solid var(--border);
+				display: flex;
+				align-items: center;
+				padding: 0 20px;
+				gap: 12px;
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				z-index: 100;
+			}
+			.logo {
+				font-weight: 700;
+				font-size: 16px;
+				color: var(--text);
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+			.logo-icon {
+				width: 28px;
+				height: 28px;
+				background: var(--accent);
+				border-radius: 6px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 14px;
+			}
+			.header-spacer {
+				flex: 1;
+			}
+			.vpn-status {
+				font-size: 12px;
+				color: var(--text-muted);
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				padding: 4px 10px;
+				background: var(--surface2);
+				border: 1px solid var(--border);
+				border-radius: 20px;
+			}
+			.user-avatar {
+				width: 30px;
+				height: 30px;
+				background: var(--accent-dim);
+				border-radius: 50%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 13px;
+				font-weight: 700;
+				color: #fff;
+				cursor: pointer;
+			}
+			.role-tag {
+				font-size: 11px;
+				padding: 2px 8px;
+				border-radius: 4px;
+				background: rgba(163, 113, 247, 0.2);
+				color: var(--purple);
+				font-weight: 600;
+			}
+
+			/* ── Sidebar ── */
+			aside {
+				position: fixed;
+				top: var(--header-h);
+				bottom: 0;
+				left: 0;
+				width: var(--sidebar-w);
+				background: var(--surface);
+				border-right: 1px solid var(--border);
+				padding: 16px 8px;
+				overflow-y: auto;
+				display: flex;
+				flex-direction: column;
+				gap: 4px;
+			}
+			.nav-section {
+				font-size: 11px;
+				font-weight: 600;
+				color: var(--text-muted);
+				text-transform: uppercase;
+				letter-spacing: 0.08em;
+				padding: 8px 8px 4px;
+				margin-top: 8px;
+			}
+			.nav-item {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				padding: 8px 12px;
+				border-radius: 6px;
+				font-size: 14px;
+				color: var(--text-muted);
+				cursor: pointer;
+				transition:
+					background 0.12s,
+					color 0.12s;
+				border: none;
+				background: transparent;
+				width: 100%;
+				text-align: left;
+			}
+			.nav-item:hover {
+				background: var(--surface2);
+				color: var(--text);
+			}
+			.nav-item.active {
+				background: rgba(47, 129, 247, 0.15);
+				color: var(--accent);
+			}
+			.nav-item svg {
+				flex-shrink: 0;
+			}
+			.nav-badge {
+				margin-left: auto;
+				background: var(--red);
+				color: #fff;
+				font-size: 10px;
+				font-weight: 700;
+				padding: 1px 5px;
+				border-radius: 8px;
+			}
+
+			/* ── Main content ── */
+			main {
+				margin-top: var(--header-h);
+				margin-left: var(--sidebar-w);
+				padding: 24px;
+				flex: 1;
+			}
+
+			.page {
+				display: none;
+			}
+			.page.active {
+				display: block;
+			}
+
+			.page-title {
+				font-size: 20px;
+				font-weight: 700;
+				margin-bottom: 4px;
+			}
+			.page-subtitle {
+				font-size: 13px;
+				color: var(--text-muted);
+				margin-bottom: 24px;
+			}
+
+			/* ── Stats row ── */
+			.stats-row {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+				gap: 12px;
+				margin-bottom: 24px;
+			}
+			.stat-card {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 16px;
+			}
+			.stat-label {
+				font-size: 12px;
+				color: var(--text-muted);
+				margin-bottom: 8px;
+			}
+			.stat-value {
+				font-size: 28px;
+				font-weight: 700;
+				line-height: 1;
+			}
+			.stat-sub {
+				font-size: 12px;
+				color: var(--text-muted);
+				margin-top: 6px;
+			}
+
+			/* ── Table ── */
+			.table-wrap {
+				overflow-x: auto;
+			}
+			table {
+				width: 100%;
+				border-collapse: collapse;
+				font-size: 13px;
+			}
+			thead th {
+				text-align: left;
+				padding: 10px 12px;
+				font-size: 11px;
+				font-weight: 600;
+				text-transform: uppercase;
+				letter-spacing: 0.06em;
+				color: var(--text-muted);
+				border-bottom: 1px solid var(--border);
+			}
+			tbody tr {
+				border-bottom: 1px solid var(--border);
+				transition: background 0.1s;
+				cursor: pointer;
+			}
+			tbody tr:hover {
+				background: var(--surface2);
+			}
+			tbody td {
+				padding: 10px 12px;
+			}
+			.mono {
+				font-family: "SFMono-Regular", Consolas, monospace;
+				font-size: 12px;
+				color: var(--text-muted);
+			}
+
+			/* ── Progress bar ── */
+			.progress {
+				height: 6px;
+				background: var(--surface2);
+				border-radius: 3px;
+				overflow: hidden;
+				width: 100px;
+			}
+			.progress-fill {
+				height: 100%;
+				border-radius: 3px;
+				background: var(--accent);
+			}
+
+			/* ── Device detail panel ── */
+			.detail-grid {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 16px;
+				margin-bottom: 16px;
+			}
+			.info-row {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				padding: 8px 0;
+				border-bottom: 1px solid var(--border);
+				font-size: 13px;
+			}
+			.info-row:last-child {
+				border: none;
+			}
+			.info-label {
+				color: var(--text-muted);
+			}
+
+			/* ── Timeline ── */
+			.timeline {
+				display: flex;
+				flex-direction: column;
+				gap: 0;
+			}
+			.timeline-item {
+				display: flex;
+				gap: 16px;
+				padding: 12px 0;
+				border-left: 2px solid var(--border);
+				margin-left: 8px;
+				padding-left: 20px;
+				position: relative;
+			}
+			.timeline-item::before {
+				content: "";
+				position: absolute;
+				left: -5px;
+				top: 18px;
+				width: 8px;
+				height: 8px;
+				border-radius: 50%;
+				background: var(--accent);
+				border: 2px solid var(--surface);
+			}
+			.tl-date {
+				font-size: 11px;
+				color: var(--text-muted);
+				min-width: 80px;
+			}
+			.tl-text {
+				font-size: 13px;
+			}
+			.tl-sub {
+				font-size: 11px;
+				color: var(--text-muted);
+			}
+
+			/* ── Upload zone ── */
+			.upload-zone {
+				border: 2px dashed var(--border);
+				border-radius: 8px;
+				padding: 40px;
+				text-align: center;
+				color: var(--text-muted);
+				cursor: pointer;
+				transition:
+					border-color 0.2s,
+					background 0.2s;
+			}
+			.upload-zone:hover {
+				border-color: var(--accent);
+				background: rgba(47, 129, 247, 0.04);
+			}
+			.upload-icon {
+				font-size: 32px;
+				margin-bottom: 12px;
+			}
+			.upload-hint {
+				font-size: 12px;
+				margin-top: 6px;
+			}
+
+			/* ── Log viewer ── */
+			.log-console {
+				background: #0a0e14;
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 16px;
+				font-family: "SFMono-Regular", Consolas, monospace;
+				font-size: 12px;
+				line-height: 1.8;
+				overflow-y: auto;
+				max-height: 420px;
+			}
+			.log-info {
+				color: #58a6ff;
+			}
+			.log-ok {
+				color: var(--green);
+			}
+			.log-warn {
+				color: var(--yellow);
+			}
+			.log-error {
+				color: var(--red);
+			}
+			.log-ts {
+				color: var(--text-muted);
+				margin-right: 8px;
+			}
+
+			/* ── Form ── */
+			.form-group {
+				margin-bottom: 16px;
+			}
+			label {
+				display: block;
+				font-size: 13px;
+				color: var(--text-muted);
+				margin-bottom: 6px;
+			}
+			input[type="text"],
+			input[type="password"],
+			input[type="email"],
+			select,
+			textarea {
+				width: 100%;
+				background: var(--surface2);
+				border: 1px solid var(--border);
+				border-radius: 6px;
+				padding: 8px 12px;
+				color: var(--text);
+				font-size: 13px;
+				outline: none;
+				transition: border-color 0.15s;
+			}
+			input:focus,
+			select:focus,
+			textarea:focus {
+				border-color: var(--accent);
+			}
+			textarea {
+				font-family: "SFMono-Regular", Consolas, monospace;
+				resize: vertical;
+			}
+			.form-row {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 16px;
+			}
+
+			/* ── Gauge ring (SVG) ── */
+			.gauge-wrap {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 8px;
+			}
+			.gauge-label {
+				font-size: 12px;
+				color: var(--text-muted);
+			}
+			.gauge-val {
+				font-size: 22px;
+				font-weight: 700;
+			}
+
+			/* ── WireGuard status ── */
+			.peer-card {
+				background: var(--surface2);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 14px 16px;
+				display: flex;
+				align-items: center;
+				gap: 12px;
+				margin-bottom: 8px;
+			}
+			.peer-icon {
+				width: 36px;
+				height: 36px;
+				border-radius: 8px;
+				background: rgba(47, 129, 247, 0.1);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 18px;
+			}
+			.peer-info {
+				flex: 1;
+			}
+			.peer-name {
+				font-size: 14px;
+				font-weight: 600;
+				margin-bottom: 2px;
+			}
+			.peer-ip {
+				font-size: 12px;
+				color: var(--text-muted);
+				font-family: monospace;
+			}
+
+			/* ── PKI tree ── */
+			.pki-tree {
+				font-family: monospace;
+				font-size: 13px;
+			}
+			.pki-node {
+				padding: 10px 14px;
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				margin-bottom: 8px;
+				background: var(--surface2);
+				display: flex;
+				align-items: center;
+				gap: 10px;
+			}
+			.pki-node.ca-root {
+				border-left: 3px solid var(--purple);
+			}
+			.pki-node.ca-inter {
+				border-left: 3px solid var(--accent);
+				margin-left: 24px;
+			}
+			.pki-node.ca-leaf {
+				border-left: 3px solid var(--green);
+				margin-left: 48px;
+			}
+			.pki-cert-info {
+				flex: 1;
+			}
+			.pki-name {
+				font-size: 13px;
+				font-weight: 600;
+			}
+			.pki-meta {
+				font-size: 11px;
+				color: var(--text-muted);
+			}
+
+			/* ── Modal overlay ── */
+			.modal-overlay {
+				display: none;
+				position: fixed;
+				inset: 0;
+				background: rgba(0, 0, 0, 0.6);
+				z-index: 200;
+				align-items: center;
+				justify-content: center;
+			}
+			.modal-overlay.open {
+				display: flex;
+			}
+			.modal {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: 12px;
+				padding: 24px;
+				width: min(480px, 94vw);
+			}
+			.modal-title {
+				font-size: 16px;
+				font-weight: 700;
+				margin-bottom: 16px;
+			}
+			.modal-footer {
+				display: flex;
+				gap: 8px;
+				justify-content: flex-end;
+				margin-top: 20px;
+			}
+
+			/* ── Toast ── */
+			#toast {
+				position: fixed;
+				bottom: 24px;
+				right: 24px;
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 12px 18px;
+				font-size: 13px;
+				display: none;
+				z-index: 300;
+				animation: slideUp 0.2s ease;
+			}
+			#toast.show {
+				display: block;
+			}
+			@keyframes slideUp {
+				from {
+					opacity: 0;
+					transform: translateY(10px);
+				}
+				to {
+					opacity: 1;
+					transform: translateY(0);
+				}
+			}
+
+			/* ── Scrollbar ── */
+			::-webkit-scrollbar {
+				width: 6px;
+			}
+			::-webkit-scrollbar-track {
+				background: transparent;
+			}
+			::-webkit-scrollbar-thumb {
+				background: var(--border);
+				border-radius: 3px;
+			}
+
+			/* ── Responsive ── */
+			@media (max-width: 768px) {
+				aside {
+					width: 56px;
+					padding: 16px 4px;
+				}
+				.nav-item span,
+				.nav-section,
+				.nav-badge {
+					display: none;
+				}
+				main {
+					margin-left: 56px;
+					padding: 16px;
+				}
+				.detail-grid {
+					grid-template-columns: 1fr;
+				}
+				.form-row {
+					grid-template-columns: 1fr;
+				}
+				.stats-row {
+					grid-template-columns: repeat(2, 1fr);
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<!-- ══════════════ HEADER ══════════════ -->
+		<header>
+			<div class="logo">
+				<div class="logo-icon">⬡</div>
+				OTA Secure
+			</div>
+			<div class="header-spacer"></div>
+			<div class="vpn-status"><span class="dot dot-green"></span> WireGuard · 3 peers</div>
+			<span class="role-tag">ADMIN</span>
+			<div class="user-avatar" title="admin@ota.local">A</div>
+		</header>
+
+		<!-- ══════════════ SIDEBAR ══════════════ -->
+		<aside>
+			<div class="nav-section">Vue d'ensemble</div>
+			<button class="nav-item active" onclick="showPage('fleet')">
+				<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+					<path d="M2 2h5v5H2V2zm0 7h5v5H2V9zm7-7h5v5H9V2zm0 7h5v5H9V9z" />
+				</svg>
+				<span>Fleet</span>
+			</button>
+
+			<div class="nav-section">Appareils</div>
+			<button class="nav-item" onclick="showPage('device')">
+				<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+					<path
+						d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" />
+				</svg>
+				<span>Détail appareil</span>
+			</button>
+
+			<div class="nav-section">Firmware</div>
+			<button class="nav-item" onclick="showPage('firmware')">
+				<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+					<path
+						d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
+					<path
+						d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z" />
+				</svg>
+				<span>Firmwares</span>
+			</button>
+
+			<div class="nav-section">Supervision</div>
+			<button class="nav-item" onclick="showPage('logs')">
+				<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+					<path
+						d="M5 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5zm3.5 4.5a.5.5 0 0 1 .5.5v1h1a.5.5 0 0 1 0 1H9v1a.5.5 0 0 1-1 0v-1H7a.5.5 0 0 1 0-1h1v-1a.5.5 0 0 1 .5-.5z" />
+				</svg>
+				<span>Logs</span>
+				<span class="nav-badge">2</span>
+			</button>
+
+			<div class="nav-section">Admin</div>
+			<button class="nav-item" onclick="showPage('users')">
+				<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+					<path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+					<path
+						fill-rule="evenodd"
+						d="M5.216 14A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216z" />
+					<path d="M4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z" />
+				</svg>
+				<span>Utilisateurs</span>
+			</button>
+			<button class="nav-item" onclick="showPage('vpn')">
+				<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+					<path
+						d="M8 1a2 2 0 0 1 2 2 4 4 0 0 1 4 4 1 1 0 0 1-1 1H3a1 1 0 0 1-1-1 4 4 0 0 1 4-4 2 2 0 0 1 2-2zm-.5 5.5A.5.5 0 0 1 8 6h.5v.5a.5.5 0 0 1-1 0V6zm4 0A.5.5 0 0 1 12 6h.5v.5a.5.5 0 0 1-1 0V6zM3 10h10a1 1 0 0 1 0 2H3a1 1 0 0 1 0-2z" />
+				</svg>
+				<span>VPN & PKI</span>
+			</button>
+		</aside>
+
+		<!-- ══════════════ MAIN ══════════════ -->
+		<main>
+			<!-- ─── PAGE : Fleet Dashboard ─── -->
+			<div id="page-fleet" class="page active">
+				<div class="page-title">Fleet Dashboard</div>
+				<div class="page-subtitle">Vue d'ensemble du parc IoT · Dernière sync : il y a 42 s</div>
+
+				<div class="stats-row">
+					<div class="stat-card">
+						<div class="stat-label">Appareils total</div>
+						<div class="stat-value" style="color: var(--text)">8</div>
+						<div class="stat-sub">↑ 1 ajouté cette semaine</div>
+					</div>
+					<div class="stat-card">
+						<div class="stat-label">En ligne</div>
+						<div class="stat-value" style="color: var(--green)">5</div>
+						<div class="stat-sub">Via WireGuard VPN</div>
+					</div>
+					<div class="stat-card">
+						<div class="stat-label">Mises à jour dispo</div>
+						<div class="stat-value" style="color: var(--yellow)">3</div>
+						<div class="stat-sub">2 firmwares signés</div>
+					</div>
+					<div class="stat-card">
+						<div class="stat-label">En erreur</div>
+						<div class="stat-value" style="color: var(--red)">1</div>
+						<div class="stat-sub">Rollback requis</div>
+					</div>
+				</div>
+
+				<div class="card">
+					<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px">
+						<div style="font-size: 15px; font-weight: 600">Appareils IoT</div>
+						<div style="display: flex; gap: 8px">
+							<button class="btn btn-sm" onclick="openModal('add-device')">+ Enregistrer</button>
+							<button class="btn btn-sm btn-primary" onclick="toast('Mise à jour envoyée à 3 appareils ✓')">
+								⬆ Tout mettre à jour
+							</button>
+						</div>
+					</div>
+					<div class="table-wrap">
+						<table>
+							<thead>
+								<tr>
+									<th>Appareil</th>
+									<th>Statut</th>
+									<th>Firmware actuel</th>
+									<th>Disponible</th>
+									<th>Dernière connexion</th>
+									<th>Progression</th>
+									<th>Actions</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr onclick="showPage('device')">
+									<td>
+										<div style="font-weight: 600">sensor-01</div>
+										<div class="mono">a3:f2:91:00:01</div>
+									</td>
+									<td>
+										<span class="dot dot-green"></span
+										><span class="badge badge-green">En ligne</span>
+									</td>
+									<td class="mono">v1.4.2</td>
+									<td><span class="badge badge-yellow">v1.5.0</span></td>
+									<td style="color: var(--text-muted); font-size: 12px">Il y a 2 min</td>
+									<td>—</td>
+									<td>
+										<button
+											class="btn btn-sm"
+											onclick="
+												event.stopPropagation();
+												toast('Mise à jour déclenchée pour sensor-01');
+											">
+											⬆ MAJ
+										</button>
+									</td>
+								</tr>
+								<tr onclick="showPage('device')">
+									<td>
+										<div style="font-weight: 600">sensor-02</div>
+										<div class="mono">a3:f2:91:00:02</div>
+									</td>
+									<td>
+										<span class="dot dot-green"></span
+										><span class="badge badge-blue">En cours MAJ</span>
+									</td>
+									<td class="mono">v1.4.2</td>
+									<td class="mono">v1.5.0</td>
+									<td style="color: var(--text-muted); font-size: 12px">Maintenant</td>
+									<td>
+										<div class="progress">
+											<div class="progress-fill" style="width: 62%"></div>
+										</div>
+										<div
+											style="
+												font-size: 11px;
+												color: var(--text-muted);
+												margin-top: 2px;
+											">
+											62% (B)
+										</div>
+									</td>
+									<td>
+										<button
+											class="btn btn-sm btn-danger"
+											onclick="
+												event.stopPropagation();
+												toast('Rollback annulé');
+											">
+											↩ Stop
+										</button>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<div style="font-weight: 600">gateway-rpi-1</div>
+										<div class="mono">a3:f2:91:00:03</div>
+									</td>
+									<td>
+										<span class="dot dot-green"></span
+										><span class="badge badge-green">À jour</span>
+									</td>
+									<td class="mono">v2.1.0</td>
+									<td>—</td>
+									<td style="color: var(--text-muted); font-size: 12px">Il y a 8 min</td>
+									<td>—</td>
+									<td>
+										<button
+											class="btn btn-sm"
+											onclick="toast('Aucune mise à jour disponible')">
+											ℹ Info
+										</button>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<div style="font-weight: 600">actuator-03</div>
+										<div class="mono">a3:f2:91:00:04</div>
+									</td>
+									<td>
+										<span class="dot dot-red"></span
+										><span class="badge badge-red">Erreur</span>
+									</td>
+									<td class="mono">v1.5.0-bad</td>
+									<td>—</td>
+									<td style="color: var(--text-muted); font-size: 12px">Il y a 1h</td>
+									<td>Boot loop détecté</td>
+									<td>
+										<button
+											class="btn btn-sm btn-danger"
+											onclick="toast('Rollback vers v1.4.2 déclenché ↩')">
+											↩ Rollback
+										</button>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<div style="font-weight: 600">sensor-04</div>
+										<div class="mono">a3:f2:91:00:05</div>
+									</td>
+									<td>
+										<span class="dot dot-yellow"></span
+										><span class="badge badge-yellow">Hors ligne</span>
+									</td>
+									<td class="mono">v1.3.8</td>
+									<td><span class="badge badge-yellow">v1.5.0</span></td>
+									<td style="color: var(--text-muted); font-size: 12px">Il y a 6h</td>
+									<td>—</td>
+									<td>
+										<button
+											class="btn btn-sm"
+											onclick="toast('Mise à jour programmée pour reconnexion')">
+											⏳ Planifier
+										</button>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+
+			<!-- ─── PAGE : Détail appareil ─── -->
+			<div id="page-device" class="page">
+				<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px">
+					<button class="btn btn-sm" onclick="showPage('fleet')">← Retour</button>
+					<div class="page-title">sensor-01</div>
+					<span class="badge badge-green"><span class="dot dot-green"></span>En ligne</span>
+				</div>
+				<div class="page-subtitle">ID : a3:f2:91:00:01 · Certificat : sensor-01.devices.ota.local</div>
+
+				<div class="detail-grid">
+					<div class="card">
+						<div style="font-size: 14px; font-weight: 600; margin-bottom: 12px">Informations</div>
+						<div class="info-row">
+							<span class="info-label">Firmware actif (A)</span><span class="mono">v1.4.2</span>
+						</div>
+						<div class="info-row">
+							<span class="info-label">Partition B</span
+							><span class="mono badge badge-yellow">v1.5.0 — prêt</span>
+						</div>
+						<div class="info-row">
+							<span class="info-label">IP WireGuard</span><span class="mono">10.8.0.5</span>
+						</div>
+						<div class="info-row"><span class="info-label">Groupe</span><span>Capteurs salle A</span></div>
+						<div class="info-row"><span class="info-label">Cert. expiration</span><span>2027-04-15</span></div>
+						<div class="info-row">
+							<span class="info-label">Signature vérif.</span
+							><span class="badge badge-green">Ed25519 ✓</span>
+						</div>
+					</div>
+
+					<div class="card">
+						<div style="font-size: 14px; font-weight: 600; margin-bottom: 12px">Partition A/B</div>
+						<div style="display: flex; gap: 12px; margin-bottom: 16px">
+							<div
+								style="
+									flex: 1;
+									background: var(--surface2);
+									border: 2px solid var(--green);
+									border-radius: 8px;
+									padding: 12px;
+									text-align: center;
+								">
+								<div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px">
+									PARTITION A
+								</div>
+								<div style="font-size: 18px; font-weight: 700; color: var(--green)">v1.4.2</div>
+								<div style="font-size: 11px; color: var(--green); margin-top: 4px">● ACTIVE</div>
+							</div>
+							<div
+								style="
+									flex: 1;
+									background: var(--surface2);
+									border: 1px solid var(--border);
+									border-radius: 8px;
+									padding: 12px;
+									text-align: center;
+								">
+								<div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px">
+									PARTITION B
+								</div>
+								<div style="font-size: 18px; font-weight: 700; color: var(--yellow)">v1.5.0</div>
+								<div style="font-size: 11px; color: var(--yellow); margin-top: 4px">○ EN ATTENTE</div>
+							</div>
+						</div>
+						<div style="display: flex; gap: 8px">
+							<button
+								class="btn btn-primary"
+								style="flex: 1"
+								onclick="toast('Basculement vers v1.5.0 sur B déclenché')">
+								⬆ Activer B (v1.5.0)
+							</button>
+							<button class="btn btn-danger" onclick="toast('Rollback vers A (v1.4.2) déclenché ↩')">
+								↩ Rollback
+							</button>
+						</div>
+					</div>
+				</div>
+
+				<div class="card">
+					<div style="font-size: 14px; font-weight: 600; margin-bottom: 16px">Historique des mises à jour</div>
+					<div class="timeline">
+						<div class="timeline-item">
+							<div class="tl-date">Auj. 14:32</div>
+							<div>
+								<div class="tl-text">Firmware v1.5.0 téléchargé sur partition B</div>
+								<div class="tl-sub">Signature vérifiée · SHA256 : a3f2…91b0</div>
+							</div>
+							<span class="badge badge-blue" style="margin-left: auto">Succès</span>
+						</div>
+						<div class="timeline-item">
+							<div class="tl-date">12 avr.</div>
+							<div>
+								<div class="tl-text">Activation v1.4.2 (partition A)</div>
+								<div class="tl-sub">Tests POST passés · Boot OK</div>
+							</div>
+							<span class="badge badge-green" style="margin-left: auto">Actif</span>
+						</div>
+						<div class="timeline-item">
+							<div class="tl-date">10 avr.</div>
+							<div>
+								<div class="tl-text">Rollback automatique depuis v1.4.1-rc1</div>
+								<div class="tl-sub">Test échoué : watchdog timeout (2×)</div>
+							</div>
+							<span class="badge badge-red" style="margin-left: auto">Rollback auto</span>
+						</div>
+						<div class="timeline-item">
+							<div class="tl-date">1 avr.</div>
+							<div>
+								<div class="tl-text">Enregistrement initial</div>
+								<div class="tl-sub">Certificat généré · firmware v1.3.8 installé</div>
+							</div>
+							<span class="badge badge-purple" style="margin-left: auto">Init</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- ─── PAGE : Gestion Firmware ─── -->
+			<div id="page-firmware" class="page">
+				<div class="page-title">Gestion des firmwares</div>
+				<div class="page-subtitle">Upload, versioning et vérification des signatures Ed25519</div>
+
+				<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px">
+					<div>
+						<div class="upload-zone" onclick="toast('Sélection de fichier simulée — firmware.bin')">
+							<div class="upload-icon">📦</div>
+							<div style="font-size: 14px; font-weight: 600; color: var(--text)">
+								Déposer un firmware ici
+							</div>
+							<div class="upload-hint">.bin, .hex, .elf · Max 32 Mo</div>
+							<div style="margin-top: 16px">
+								<button class="btn btn-primary" onclick="event.stopPropagation()">
+									Choisir un fichier
+								</button>
+							</div>
+						</div>
+					</div>
+					<div class="card">
+						<div style="font-size: 14px; font-weight: 600; margin-bottom: 12px">Métadonnées du package</div>
+						<div class="form-group">
+							<label>Version</label>
+							<input type="text" placeholder="ex: v1.5.1" />
+						</div>
+						<div class="form-group">
+							<label>Cible (appareil ou groupe)</label>
+							<select>
+								<option>Tous les capteurs</option>
+								<option>sensor-01</option>
+								<option>sensor-02</option>
+								<option>Salle A</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>Notes de version</label>
+							<textarea rows="3" placeholder="Changelog…"></textarea>
+						</div>
+						<button
+							class="btn btn-primary"
+							style="width: 100%"
+							onclick="toast('Firmware signé & uploadé ✓ — Signature Ed25519 attachée')">
+							Signer & Uploader
+						</button>
+					</div>
+				</div>
+
+				<div class="card">
+					<div style="font-size: 15px; font-weight: 600; margin-bottom: 16px">Bibliothèque de firmwares</div>
+					<div class="table-wrap">
+						<table>
+							<thead>
+								<tr>
+									<th>Version</th>
+									<th>Cible</th>
+									<th>Taille</th>
+									<th>Signature</th>
+									<th>SHA256</th>
+									<th>Uploadé le</th>
+									<th>Statut</th>
+									<th></th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td><strong>v1.5.0</strong></td>
+									<td>Capteurs</td>
+									<td>284 Ko</td>
+									<td><span class="badge badge-green">Ed25519 ✓</span></td>
+									<td class="mono">a3f291…</td>
+									<td style="color: var(--text-muted); font-size: 12px">14 avr. 2026</td>
+									<td><span class="badge badge-blue">Déployé (3)</span></td>
+									<td>
+										<button
+											class="btn btn-sm"
+											onclick="
+												toast('Déployé sur sensor-01, sensor-02, sensor-04')
+											">
+											Détails
+										</button>
+									</td>
+								</tr>
+								<tr>
+									<td><strong>v1.4.2</strong></td>
+									<td>Capteurs</td>
+									<td>271 Ko</td>
+									<td><span class="badge badge-green">Ed25519 ✓</span></td>
+									<td class="mono">b91c04…</td>
+									<td style="color: var(--text-muted); font-size: 12px">12 avr. 2026</td>
+									<td><span class="badge badge-green">Actif (2)</span></td>
+									<td>
+										<button class="btn btn-sm" onclick="toast('Manifest JSON affiché')">
+											Manifest
+										</button>
+									</td>
+								</tr>
+								<tr>
+									<td>v1.4.1-rc1</td>
+									<td>Capteurs</td>
+									<td>269 Ko</td>
+									<td><span class="badge badge-green">Ed25519 ✓</span></td>
+									<td class="mono">f00d22…</td>
+									<td style="color: var(--text-muted); font-size: 12px">10 avr. 2026</td>
+									<td><span class="badge badge-red">Rollback</span></td>
+									<td>
+										<button
+											class="btn btn-sm btn-danger"
+											onclick="toast('Firmware archivé (hors déploiement)')">
+											Archiver
+										</button>
+									</td>
+								</tr>
+								<tr>
+									<td><strong>v2.1.0</strong></td>
+									<td>gateway-rpi-1</td>
+									<td>1.1 Mo</td>
+									<td><span class="badge badge-green">Ed25519 ✓</span></td>
+									<td class="mono">9e3a17…</td>
+									<td style="color: var(--text-muted); font-size: 12px">8 avr. 2026</td>
+									<td><span class="badge badge-green">Actif (1)</span></td>
+									<td><button class="btn btn-sm">Détails</button></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+
+			<!-- ─── PAGE : Logs & Alertes ─── -->
+			<div id="page-logs" class="page">
+				<div class="page-title">Logs & Alertes</div>
+				<div class="page-subtitle">Événements système en temps réel · 2 alertes actives</div>
+
+				<div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap">
+					<select class="btn" style="padding: 6px 12px">
+						<option>Tous les appareils</option>
+						<option>sensor-01</option>
+						<option>sensor-02</option>
+						<option>actuator-03</option>
+					</select>
+					<select class="btn" style="padding: 6px 12px">
+						<option>Tous niveaux</option>
+						<option>INFO</option>
+						<option>WARN</option>
+						<option>ERROR</option>
+					</select>
+					<button class="btn">⟳ Actualiser</button>
+					<button class="btn btn-sm" style="margin-left: auto" onclick="toast('Logs exportés en CSV')">
+						⬇ Export CSV
+					</button>
+				</div>
+
+				<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px">
+					<div class="card" style="border-left: 3px solid var(--red)">
+						<div style="font-size: 13px; font-weight: 600; color: var(--red); margin-bottom: 4px">
+							🔴 Alerte — actuator-03
+						</div>
+						<div style="font-size: 12px; color: var(--text-muted)">
+							Boot loop détecté après mise à jour v1.5.0-bad · Rollback recommandé
+						</div>
+						<div style="margin-top: 10px; display: flex; gap: 8px">
+							<button class="btn btn-sm btn-danger" onclick="toast('Rollback déclenché ↩')">
+								↩ Rollback maintenant
+							</button>
+							<button class="btn btn-sm" onclick="toast('Alerte acquittée')">Acquitter</button>
+						</div>
+					</div>
+					<div class="card" style="border-left: 3px solid var(--yellow)">
+						<div style="font-size: 13px; font-weight: 600; color: var(--yellow); margin-bottom: 4px">
+							🟡 Alerte — sensor-04
+						</div>
+						<div style="font-size: 12px; color: var(--text-muted)">
+							Hors ligne depuis 6h · Mise à jour v1.5.0 en attente
+						</div>
+						<div style="margin-top: 10px; display: flex; gap: 8px">
+							<button class="btn btn-sm" onclick="toast('Ping programmé à la reconnexion')">
+								⏳ Planifier MAJ
+							</button>
+							<button class="btn btn-sm" onclick="toast('Alerte acquittée')">Acquitter</button>
+						</div>
+					</div>
+				</div>
+
+				<div class="card">
+					<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px">
+						<div style="font-size: 14px; font-weight: 600">Console</div>
+						<span class="badge badge-green" style="font-size: 10px">● LIVE</span>
+						<input type="text" placeholder="Filtrer…" style="max-width: 200px; margin-left: auto" />
+					</div>
+					<div class="log-console" id="log-console">
+						<div>
+							<span class="log-ts">2026-04-16 14:47:03</span><span class="log-info">[INFO]</span> server TLS
+							handshake OK – sensor-01 (10.8.0.5)
+						</div>
+						<div>
+							<span class="log-ts">2026-04-16 14:47:01</span><span class="log-ok"> [OK] </span> ota Firmware
+							v1.5.0 envoyé sensor-01 · 284 KB en 1.2s
+						</div>
+						<div>
+							<span class="log-ts">2026-04-16 14:46:58</span><span class="log-info">[INFO]</span> wireguard
+							Peer sensor-01 connecté (10.8.0.5 → 10.8.0.1)
+						</div>
+						<div>
+							<span class="log-ts">2026-04-16 14:45:12</span><span class="log-ok"> [OK] </span> firmware
+							Signature Ed25519 vérifiée pour v1.5.0 ✓
+						</div>
+						<div>
+							<span class="log-ts">2026-04-16 14:44:55</span><span class="log-info">[INFO]</span> auth JWT
+							émis pour admin@ota.local (exp: +8h)
+						</div>
+						<div>
+							<span class="log-ts">2026-04-16 13:51:22</span><span class="log-warn"> [WARN]</span> sensor-04
+							Hors ligne depuis 5h59m – mise à jour différée
+						</div>
+						<div>
+							<span class="log-ts">2026-04-16 13:20:01</span
+							><span class="log-error">[ERR] </span> actuator-03 Boot loop × 2 après flash v1.5.0-bad –
+							rollback auto lancé
+						</div>
+						<div>
+							<span class="log-ts">2026-04-16 13:20:00</span
+							><span class="log-warn"> [WARN]</span> actuator-03 Watchdog timeout (2000ms) – test POST
+							échoué
+						</div>
+						<div>
+							<span class="log-ts">2026-04-16 13:18:45</span><span class="log-info">[INFO]</span> ota Flash
+							partition B → actuator-03 terminé (v1.5.0-bad)
+						</div>
+						<div>
+							<span class="log-ts">2026-04-16 12:10:00</span><span class="log-ok"> [OK] </span> ota
+							sensor-02 : activation v1.5.0 partition B en cours (62%)
+						</div>
+						<div>
+							<span class="log-ts">2026-04-16 10:05:14</span><span class="log-ok"> [OK] </span> pki
+							Certificat renouvelé sensor-03 (exp 2027-04-15)
+						</div>
+						<div>
+							<span class="log-ts">2026-04-16 09:00:00</span><span class="log-info">[INFO]</span> server
+							Démarrage OTA Secure v0.3.1 – axum 0.7 / PostgreSQL 16
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- ─── PAGE : Utilisateurs ─── -->
+			<div id="page-users" class="page">
+				<div class="page-title">Gestion des utilisateurs</div>
+				<div class="page-subtitle">Rôles Admin / User · Authentification JWT + mTLS</div>
+
+				<div style="display: flex; justify-content: flex-end; margin-bottom: 16px">
+					<button class="btn btn-primary" onclick="openModal('add-user')">+ Nouvel utilisateur</button>
+				</div>
+
+				<div class="card">
+					<div class="table-wrap">
+						<table>
+							<thead>
+								<tr>
+									<th>Utilisateur</th>
+									<th>Rôle</th>
+									<th>Dernière connexion</th>
+									<th>Certificat client</th>
+									<th>2FA</th>
+									<th>Statut</th>
+									<th>Actions</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>
+										<div style="font-weight: 600">admin</div>
+										<div style="font-size: 12px; color: var(--text-muted)">
+											admin@ota.local
+										</div>
+									</td>
+									<td><span class="badge badge-purple">Admin</span></td>
+									<td style="font-size: 12px; color: var(--text-muted)">Maintenant</td>
+									<td><span class="badge badge-green">admin.ota.local ✓</span></td>
+									<td><span class="badge badge-green">TOTP</span></td>
+									<td><span class="dot dot-green"></span>Actif</td>
+									<td>
+										<button
+											class="btn btn-sm"
+											onclick="
+												toast(
+													'Vous ne pouvez pas supprimer votre propre compte',
+												)
+											">
+											⚙
+										</button>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<div style="font-weight: 600">alice</div>
+										<div style="font-size: 12px; color: var(--text-muted)">
+											alice@example.com
+										</div>
+									</td>
+									<td><span class="badge badge-blue">User</span></td>
+									<td style="font-size: 12px; color: var(--text-muted)">Il y a 2h</td>
+									<td><span class="badge badge-green">alice.ota.local ✓</span></td>
+									<td><span class="badge badge-yellow">Non activé</span></td>
+									<td><span class="dot dot-green"></span>Actif</td>
+									<td>
+										<button
+											class="btn btn-sm"
+											onclick="toast('Rôle modifié : alice → Admin')">
+											⚙
+										</button>
+										<button
+											class="btn btn-sm btn-danger"
+											onclick="toast('alice désactivé')">
+											✕
+										</button>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<div style="font-weight: 600">bob</div>
+										<div style="font-size: 12px; color: var(--text-muted)">
+											bob@example.com
+										</div>
+									</td>
+									<td><span class="badge badge-blue">User</span></td>
+									<td style="font-size: 12px; color: var(--text-muted)">Il y a 5j</td>
+									<td><span class="badge badge-red">Expiré</span></td>
+									<td><span class="badge badge-yellow">Non activé</span></td>
+									<td><span class="dot dot-grey"></span>Inactif</td>
+									<td>
+										<button
+											class="btn btn-sm"
+											onclick="toast('Certificat renouvelé pour bob ✓')">
+											🔄 Renouveler cert.
+										</button>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+
+			<!-- ─── PAGE : VPN & PKI ─── -->
+			<div id="page-vpn" class="page">
+				<div class="page-title">WireGuard VPN & PKI</div>
+				<div class="page-subtitle">Configuration réseau sécurisé et gestion de l'autorité de certification</div>
+
+				<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px">
+					<!-- WireGuard -->
+					<div class="card">
+						<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px">
+							<div style="font-size: 14px; font-weight: 600">WireGuard</div>
+							<span class="badge badge-green">● Actif</span>
+							<button
+								class="btn btn-sm"
+								style="margin-left: auto"
+								onclick="toast('Interface wg0 redémarrée')">
+								↺ Restart
+							</button>
+						</div>
+						<div class="info-row"><span class="info-label">Interface</span><span class="mono">wg0</span></div>
+						<div class="info-row">
+							<span class="info-label">IP serveur</span><span class="mono">10.8.0.1/24</span>
+						</div>
+						<div class="info-row"><span class="info-label">Port</span><span class="mono">51820/UDP</span></div>
+						<div class="info-row"><span class="info-label">Peers actifs</span><span>3 / 8</span></div>
+						<div style="margin-top: 16px; font-size: 13px; font-weight: 600; margin-bottom: 8px">
+							Peers connectés
+						</div>
+						<div class="peer-card">
+							<div class="peer-icon">🖥</div>
+							<div class="peer-info">
+								<div class="peer-name">gateway-rpi-1</div>
+								<div class="peer-ip">10.8.0.3 · ↑ 12 MB · ↓ 1.4 MB</div>
+							</div>
+							<span class="badge badge-green">En ligne</span>
+						</div>
+						<div class="peer-card">
+							<div class="peer-icon">📡</div>
+							<div class="peer-info">
+								<div class="peer-name">sensor-01</div>
+								<div class="peer-ip">10.8.0.5 · ↑ 284 KB · ↓ 12 KB</div>
+							</div>
+							<span class="badge badge-green">En ligne</span>
+						</div>
+						<div class="peer-card">
+							<div class="peer-icon">📡</div>
+							<div class="peer-info">
+								<div class="peer-name">sensor-02</div>
+								<div class="peer-ip">10.8.0.6 · ↑ 284 KB · ↓ 11 KB</div>
+							</div>
+							<span class="badge badge-blue">MAJ en cours</span>
+						</div>
+						<div style="margin-top: 12px">
+							<button class="btn btn-sm btn-primary" onclick="openModal('add-peer')">
+								+ Ajouter un peer
+							</button>
+						</div>
+					</div>
+
+					<!-- PKI -->
+					<div class="card">
+						<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px">
+							<div style="font-size: 14px; font-weight: 600">PKI — Autorité de Certification</div>
+						</div>
+
+						<div class="pki-tree">
+							<div class="pki-node ca-root">
+								<span style="font-size: 18px">🔐</span>
+								<div class="pki-cert-info">
+									<div class="pki-name">Root CA (offline)</div>
+									<div class="pki-meta">Exp: 2036-04-15 · RSA-4096 / self-signed</div>
+								</div>
+								<span class="badge badge-purple">Root</span>
+							</div>
+							<div class="pki-node ca-inter">
+								<span style="font-size: 16px">🏛</span>
+								<div class="pki-cert-info">
+									<div class="pki-name">Intermediate CA — Server</div>
+									<div class="pki-meta">Exp: 2031-04-15 · ECDSA P-256</div>
+								</div>
+								<span class="badge badge-blue">Inter</span>
+							</div>
+							<div class="pki-node ca-leaf" style="margin-left: 72px">
+								<span style="font-size: 14px">🖥</span>
+								<div class="pki-cert-info">
+									<div class="pki-name">ota-server.local</div>
+									<div class="pki-meta">Exp: 2027-04-15 · TLS serveur</div>
+								</div>
+								<span class="badge badge-green">✓</span>
+							</div>
+							<div class="pki-node ca-inter" style="margin-top: 8px">
+								<span style="font-size: 16px">🏛</span>
+								<div class="pki-cert-info">
+									<div class="pki-name">Intermediate CA — Devices</div>
+									<div class="pki-meta">Exp: 2031-04-15 · ECDSA P-256</div>
+								</div>
+								<span class="badge badge-blue">Inter</span>
+							</div>
+							<div class="pki-node ca-leaf" style="margin-left: 72px">
+								<span style="font-size: 14px">📡</span>
+								<div class="pki-cert-info">
+									<div class="pki-name">sensor-01.devices.ota.local</div>
+									<div class="pki-meta">Exp: 2027-04-15 · mTLS device</div>
+								</div>
+								<span class="badge badge-green">✓</span>
+							</div>
+							<div class="pki-node ca-leaf" style="margin-left: 72px">
+								<span style="font-size: 14px">📡</span>
+								<div class="pki-cert-info">
+									<div class="pki-name">sensor-02.devices.ota.local</div>
+									<div class="pki-meta">Exp: 2027-04-15 · mTLS device</div>
+								</div>
+								<span class="badge badge-green">✓</span>
+							</div>
+							<div class="pki-node ca-leaf" style="margin-left: 72px">
+								<span style="font-size: 14px">👤</span>
+								<div class="pki-cert-info">
+									<div class="pki-name">alice.users.ota.local</div>
+									<div class="pki-meta">Exp: 2027-04-15 · mTLS user</div>
+								</div>
+								<span class="badge badge-green">✓</span>
+							</div>
+						</div>
+
+						<div style="margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap">
+							<button
+								class="btn btn-sm btn-primary"
+								onclick="toast('Nouveau certificat device généré via rcgen ✓')">
+								+ Cert. appareil
+							</button>
+							<button class="btn btn-sm" onclick="toast('CRL mise à jour et publiée')">
+								↺ Révoquer / CRL
+							</button>
+							<button class="btn btn-sm" onclick="toast('Bundle Root CA exporté (.pem)')">
+								⬇ Export CA
+							</button>
+						</div>
+					</div>
+				</div>
+
+				<!-- Ed25519 Signing Key -->
+				<div class="card">
+					<div style="font-size: 14px; font-weight: 600; margin-bottom: 12px">Clés de signature firmware (Ed25519)</div>
+					<div class="form-row">
+						<div>
+							<div class="form-group">
+								<label>Clé publique active</label>
+								<textarea rows="3" readonly style="font-size: 11px">
+-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEAK8Xv2l3B9qHtNzPm4wRjFkLs0pDqYxMhCbWnAeT7iU0=
+-----END PUBLIC KEY-----</textarea
+								>
+							</div>
+						</div>
+						<div>
+							<div style="margin-bottom: 8px; font-size: 13px; color: var(--text-muted)">Actions</div>
+							<div style="display: flex; flex-direction: column; gap: 8px">
+								<button
+									class="btn"
+									onclick="toast('Nouvelle paire Ed25519 générée via ed25519-dalek ✓')">
+									🔑 Générer nouvelle clé
+								</button>
+								<button
+									class="btn"
+									onclick="toast('Clé publique exportée — distribution aux appareils requise')">
+									⬇ Exporter clé publique
+								</button>
+								<button
+									class="btn btn-danger"
+									onclick="
+										toast('Rotation de clé : ancienne clé révoquée, firmwares re-signés')
+									">
+									⚠ Rotation de clé
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</main>
+
+		<!-- ══════════════ MODALS ══════════════ -->
+		<div class="modal-overlay" id="modal-add-device">
+			<div class="modal">
+				<div class="modal-title">Enregistrer un nouvel appareil</div>
+				<div class="form-group">
+					<label>Nom de l'appareil</label>
+					<input type="text" placeholder="ex: sensor-05" />
+				</div>
+				<div class="form-row">
+					<div class="form-group">
+						<label>Adresse MAC</label>
+						<input type="text" placeholder="aa:bb:cc:dd:ee:ff" />
+					</div>
+					<div class="form-group">
+						<label>Groupe</label>
+						<select>
+							<option>Capteurs salle A</option>
+							<option>Actionneurs</option>
+							<option>Gateways</option>
+						</select>
+					</div>
+				</div>
+				<div class="form-group">
+					<label>Générer un certificat X.509</label>
+					<div style="display: flex; gap: 8px; align-items: center">
+						<input type="text" placeholder="sensor-05.devices.ota.local" style="flex: 1" />
+						<button class="btn btn-sm">Auto</button>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button class="btn" onclick="closeModal('add-device')">Annuler</button>
+					<button
+						class="btn btn-primary"
+						onclick="
+							closeModal('add-device');
+							toast('Appareil sensor-05 enregistré · Certificat généré ✓');
+						">
+						Créer
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal-overlay" id="modal-add-user">
+			<div class="modal">
+				<div class="modal-title">Nouvel utilisateur</div>
+				<div class="form-row">
+					<div class="form-group">
+						<label>Nom</label>
+						<input type="text" placeholder="charlie" />
+					</div>
+					<div class="form-group">
+						<label>Email</label>
+						<input type="email" placeholder="charlie@example.com" />
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="form-group">
+						<label>Rôle</label>
+						<select>
+							<option>User</option>
+							<option>Admin</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label>Mot de passe temporaire</label>
+						<input type="password" placeholder="Auto-généré" />
+					</div>
+				</div>
+				<div class="form-group">
+					<label>Générer un certificat client mTLS</label>
+					<select>
+						<option>Oui — charlie.users.ota.local</option>
+						<option>Non</option>
+					</select>
+				</div>
+				<div class="modal-footer">
+					<button class="btn" onclick="closeModal('add-user')">Annuler</button>
+					<button
+						class="btn btn-primary"
+						onclick="
+							closeModal('add-user');
+							toast('Utilisateur charlie créé · Email envoyé ✓');
+						">
+						Créer
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal-overlay" id="modal-add-peer">
+			<div class="modal">
+				<div class="modal-title">Ajouter un peer WireGuard</div>
+				<div class="form-group">
+					<label>Nom du peer</label>
+					<input type="text" placeholder="ex: sequans-modem-01" />
+				</div>
+				<div class="form-row">
+					<div class="form-group">
+						<label>IP allouée</label>
+						<input type="text" placeholder="10.8.0.10/32" />
+					</div>
+					<div class="form-group">
+						<label>Clé publique WireGuard</label>
+						<input type="text" placeholder="Base64..." />
+					</div>
+				</div>
+				<div class="form-group">
+					<label>Config générée (copier sur le client)</label>
+					<textarea rows="6" readonly style="font-size: 11px">
+[Interface]
+PrivateKey = &lt;GENERATED_ON_CLIENT&gt;
+Address = 10.8.0.10/32
+DNS = 10.8.0.1
+
+[Peer]
+PublicKey = OTA_SERVER_PUBKEY
+Endpoint = ota.example.com:51820
+AllowedIPs = 10.8.0.0/24
+PersistentKeepalive = 25</textarea
+					>
+				</div>
+				<div class="modal-footer">
+					<button class="btn" onclick="closeModal('add-peer')">Annuler</button>
+					<button
+						class="btn btn-primary"
+						onclick="
+							closeModal('add-peer');
+							toast('Peer WireGuard ajouté · Config copiée ✓');
+						">
+						Ajouter
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- ══════════════ TOAST ══════════════ -->
+		<div id="toast"></div>
+
+		<script>
+			function showPage(name) {
+				document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
+				document.querySelectorAll(".nav-item").forEach((n) => n.classList.remove("active"));
+				document.getElementById("page-" + name).classList.add("active");
+
+				const map = { fleet: 0, device: 1, firmware: 2, logs: 3, users: 4, vpn: 5 };
+				const items = document.querySelectorAll(".nav-item");
+				if (items[map[name]]) items[map[name]].classList.add("active");
+			}
+
+			function openModal(id) {
+				document.getElementById("modal-" + id).classList.add("open");
+			}
+			function closeModal(id) {
+				document.getElementById("modal-" + id).classList.remove("open");
+			}
+			document.querySelectorAll(".modal-overlay").forEach((el) => {
+				el.addEventListener("click", (e) => {
+					if (e.target === el) el.classList.remove("open");
+				});
+			});
+
+			let toastTimer;
+			function toast(msg) {
+				const el = document.getElementById("toast");
+				el.textContent = msg;
+				el.classList.add("show");
+				clearTimeout(toastTimer);
+				toastTimer = setTimeout(() => el.classList.remove("show"), 3000);
+			}
+
+			// Simulate live log append
+			const logLines = [
+				["INFO", "wireguard", "Handshake renouvelé – sensor-01"],
+				["OK", "ota", "Checksum OK – v1.5.0 (sensor-01)"],
+				["INFO", "auth", "Requête vérifiée – mTLS sensor-01"],
+				["WARN", "sensor-04", "Toujours hors ligne – 7h"],
+				["INFO", "server", "GET /api/v1/devices/status – 200 OK"],
+			];
+			let lIdx = 0;
+			setInterval(() => {
+				const console = document.getElementById("log-console");
+				if (!console) return;
+				const [level, src, msg] = logLines[lIdx % logLines.length];
+				const cls = { INFO: "log-info", OK: "log-ok", WARN: "log-warn", ERR: "log-error" }[level] || "log-info";
+				const lbl = level === "OK" ? "  [OK]  " : `[${level.padEnd(4)}]`;
+				const now = new Date().toISOString().replace("T", " ").slice(0, 19);
+				const div = document.createElement("div");
+				div.innerHTML = `<span class="log-ts">${now}</span><span class="${cls}">${lbl}</span>  ${src.padEnd(11)} ${msg}`;
+				console.appendChild(div);
+				console.scrollTop = console.scrollHeight;
+				lIdx++;
+			}, 4000);
+		</script>
+	</body>
+</html>
